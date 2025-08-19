@@ -1,11 +1,17 @@
-import React from 'react'
-import CloudinaryUpload from '../components/CloudinaryUpload'
-import api from '../components/api'
+import React from "react";
+import CloudinaryUpload from "../../components/CloudinaryUpload";
+import { updateProfile } from "../../components/api";
 
 export default function ProfilePicUploader() {
   async function onUploaded(url: string) {
-    await api.put('/api/auth/me', { profileImage: url })
-    alert('Profile image updated!')
+    try {
+      await updateProfile({ profileImage: url });
+      alert("✅ Profile image updated!");
+    } catch (err) {
+      console.error("Profile update failed:", err);
+      alert("❌ Failed to update profile.");
+    }
   }
-  return <CloudinaryUpload onUploaded={(url) => onUploaded(url)} />
+
+  return <CloudinaryUpload onUploaded={onUploaded} />;
 }
