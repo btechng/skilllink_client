@@ -1,67 +1,152 @@
-import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import api from '../components/api'
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import api from "../components/api";
+import {
+  Container,
+  Typography,
+  Paper,
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  CardActions,
+  Stack,
+  Alert,
+} from "@mui/material";
+
+type Proposal = {
+  _id: string;
+  freelancer?: { name: string };
+  bidAmount: number;
+  coverLetter: string;
+  status: string;
+};
 
 export default function Proposals() {
-  const { id } = useParams() // jobId
-  const [role, setRole] = useState<string>('')
-  const [coverLetter, setCoverLetter] = useState('')
-  const [bidAmount, setBidAmount] = useState<number>(0)
-  const [list, setList] = useState<any[]>([])
-  const [msg, setMsg] = useState<string | null>(null)
+  const { id } = useParams(); // jobId
+  const [role, setRole] = useState<string>("");
+  const [coverLetter, setCoverLetter] = useState("");
+  const [bidAmount, setBidAmount] = useState<number | "">("");
+  const [list, setList] = useState<Proposal[]>([]);
+  const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    api.get('/api/auth/me').then(r => setRole(r.data.role)).catch(()=>{})
-    // Try load proposals (if client)
-    api.get('/api/proposals/job/' + id).then(r => setList(r.data)).catch(()=>{})
-  }, [id])
+    api
+      .get("/api/auth/me")
+      .then((r) => setRole(r.data.role))
+      .catch(() => {});
 
-  async function send(e: React.FormEvent) {
-    e.preventDefault()
-    setMsg(null)
+    if (id) {
+      api
+        .get("/api/proposals/job/" + id)
+        .then((r) => setList(r.data))
+        .catch(() => {});
+    }
+  }, [id]);
+
+  const send = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMsg(null);
     try {
-      await api.post('/api/proposals', { jobId: id, coverLetter, bidAmount })
-      setMsg('Proposal sent!')
-    } catch (e:any) { setMsg(e.response?.data?.message || 'Error') }
-  }
+      await api.post("/api/proposals", { jobId: id, coverLetter, bidAmount });
+      setMsg("✅ Proposal sent!");
+      setCoverLetter("");
+      setBidAmount("");
+    } catch (e: any) {
+      setMsg(e.response?.data?.message || "❌ Error sending proposal");
+    }
+  };
 
-  async function accept(pid: string) {
-    await api.post('/api/proposals/' + pid + '/accept')
-    setList(list => list.map(x => x._id === pid ? { ...x, status: 'accepted' } : x))
-  }
-  async function reject(pid: string) {
-    await api.post('/api/proposals/' + pid + '/reject')
-    setList(list => list.map(x => x._id === pid ? { ...x, status: 'rejected' } : x))
-  }
+  const accept = async (pid: string) => {
+    await api.post("/api/proposals/" + pid + "/accept");
+    setList((list) =>
+      list.map((x) => (x._id === pid ? { ...x, status: "accepted" } : x))
+    );
+  };
+
+  const reject = async (pid: string) => {
+    await api.post("/api/proposals/" + pid + "/reject");
+    setList((list) =>
+      list.map((x) => (x._id === pid ? { ...x, status: "rejected" } : x))
+    );
+  };
 
   return (
-    <div style={{ maxWidth: 900, margin:'20px auto' }}>
-      <h3>Proposals</h3>
-      {role === 'freelancer' && (
-        <form onSubmit={send} style={{ display:'grid', gap:8, border:'1px solid #eee', padding:10, borderRadius:8 }}>
-          <textarea placeholder="Cover letter" value={coverLetter} onChange={e=>setCoverLetter(e.target.value)} />
-          <input type="number" placeholder="Bid amount" value={bidAmount} onChange={e=>setBidAmount(Number(e.target.value))} />
-          <button type="submit">Send Proposal</button>
-        </form>
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Typography variant="h5" gutterBottom>
+        Proposals
+      </Typography>
+
+      {role === "freelancer" && (
+        <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+          <Stack spacing={2} component="form" onSubmit={send}>
+            <TextField
+              label="Cover Letter"
+              multiline
+              rows={4}
+              fullWidth
+              value={coverLetter}
+              onChange={(e) => setCoverLetter(e.target.value)}
+              required
+            />
+            <TextField
+              label="Bid Amount"
+              type="number"
+              fullWidth
+              value={bidAmount}
+              onChange={(e) => setBidAmount(Number(e.target.value))}
+              required
+            />
+            <Button type="submit" variant="contained" color="primary">
+              Send Proposal
+            </Button>
+          </Stack>
+        </Paper>
       )}
 
-      {role === 'client' && (
-        <div style={{ display:'grid', gap:8, marginTop:12 }}>
-          {list.map(p => (
-            <div key={p._id} style={{ border:'1px solid #eee', padding:8, borderRadius:8 }}>
-              <div><b>{p.freelancer?.name}</b> — ₦{p.bidAmount} — {p.status}</div>
-              <div>{p.coverLetter}</div>
-              {p.status === 'pending' && (
-                <div style={{ display:'flex', gap:8 }}>
-                  <button onClick={()=>accept(p._id)}>Accept</button>
-                  <button onClick={()=>reject(p._id)}>Reject</button>
-                </div>
+      {role === "client" && (
+        <Stack spacing={2}>
+          {list.map((p) => (
+            <Card key={p._id} variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  {p.freelancer?.name} — ₦{p.bidAmount} — {p.status}
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  {p.coverLetter}
+                </Typography>
+              </CardContent>
+              {p.status === "pending" && (
+                <CardActions>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={() => accept(p._id)}
+                  >
+                    Accept
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => reject(p._id)}
+                  >
+                    Reject
+                  </Button>
+                </CardActions>
               )}
-            </div>
+            </Card>
           ))}
-        </div>
+        </Stack>
       )}
-      {msg && <p>{msg}</p>}
-    </div>
-  )
+
+      {msg && (
+        <Alert
+          severity={msg.startsWith("✅") ? "success" : "error"}
+          sx={{ mt: 3 }}
+        >
+          {msg}
+        </Alert>
+      )}
+    </Container>
+  );
 }

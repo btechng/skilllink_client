@@ -1,41 +1,98 @@
-import React, { useEffect, useState } from 'react'
-import api from '../components/api'
+import React, { useEffect, useState } from "react";
+import api from "../components/api";
+import {
+  Box,
+  Typography,
+  Card,
+  CardMedia,
+  CardContent,
+  Avatar,
+} from "@mui/material";
 
 type Work = {
-  _id: string
-  title: string
-  description?: string
-  mediaUrl: string
-  mediaType: 'image' | 'video'
-  user?: { name: string, profileImage?: string, title?: string }
-}
+  _id: string;
+  title: string;
+  description?: string;
+  mediaUrl: string;
+  mediaType: "image" | "video";
+  user?: { name: string; profileImage?: string; title?: string };
+};
 
 export default function Gallery() {
-  const [items, setItems] = useState<Work[]>([])
+  const [items, setItems] = useState<Work[]>([]);
 
   useEffect(() => {
-    api.get('/api/works').then(res => setItems(res.data))
-  }, [])
+    api.get("/api/works").then((res) => setItems(res.data));
+  }, []);
 
   return (
-    <div style={{ maxWidth: 1100, margin:'20px auto', fontFamily:'Inter, system-ui' }}>
-      <h2>Public Gallery</h2>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(240px, 1fr))', gap:12 }}>
-        {items.map(x => (
-          <div key={x._id} style={{ border:'1px solid #eee', padding:8, borderRadius:8 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <img src={x.user?.profileImage || 'https://via.placeholder.com/32'} width={32} height={32} style={{ borderRadius: 6 }} />
-              <div>
-                <strong>{x.title}</strong>
-                <div style={{ fontSize:12, opacity:0.7 }}>{x.user?.name} {x.user?.title ? '• ' + x.user.title : ''}</div>
-              </div>
-            </div>
-            {x.mediaType === 'image'
-              ? <img src={x.mediaUrl} style={{ width:'100%', borderRadius:6, marginTop:6 }} />
-              : <video src={x.mediaUrl} controls style={{ width:'100%', borderRadius:6, marginTop:6 }} />}
-          </div>
+    <Box
+      sx={{
+        maxWidth: 1200,
+        mx: "auto",
+        py: 4,
+        px: 2,
+        fontFamily: "Inter, system-ui",
+      }}
+    >
+      <Typography variant="h4" sx={{ fontWeight: "bold", mb: 4 }}>
+        Public Gallery
+      </Typography>
+
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 3,
+          justifyContent: "center",
+        }}
+      >
+        {items.map((x) => (
+          <Card
+            key={x._id}
+            sx={{
+              width: { xs: "100%", sm: "48%", md: "23%" },
+              borderRadius: 3,
+              boxShadow: 2,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <CardContent
+              sx={{ display: "flex", alignItems: "center", gap: 1, pb: 1 }}
+            >
+              <Avatar
+                src={x.user?.profileImage || "https://via.placeholder.com/32"}
+                alt={x.user?.name}
+                sx={{ width: 32, height: 32 }}
+              />
+              <Box>
+                <Typography sx={{ fontWeight: 600 }}>{x.title}</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {x.user?.name} {x.user?.title ? "• " + x.user.title : ""}
+                </Typography>
+              </Box>
+            </CardContent>
+
+            {x.mediaType === "image" ? (
+              <CardMedia
+                component="img"
+                image={x.mediaUrl}
+                alt={x.title}
+                sx={{ borderRadius: 1, mt: 1 }}
+              />
+            ) : (
+              <Box sx={{ mt: 1 }}>
+                <video
+                  src={x.mediaUrl}
+                  controls
+                  style={{ width: "100%", borderRadius: 8 }}
+                />
+              </Box>
+            )}
+          </Card>
         ))}
-      </div>
-    </div>
-  )
+      </Box>
+    </Box>
+  );
 }

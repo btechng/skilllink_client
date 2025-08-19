@@ -1,34 +1,98 @@
-import React, { useState } from 'react'
-import api from '../components/api'
+import React, { useState } from "react";
+import api from "../components/api";
+import {
+  Container,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Paper,
+  Alert,
+} from "@mui/material";
 
 export default function PostJob() {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [budget, setBudget] = useState(0)
-  const [category, setCategory] = useState('')
-  const [msg, setMsg] = useState<string | null>(null)
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [budget, setBudget] = useState<number | "">("");
+  const [category, setCategory] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    setMsg(null)
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMsg(null);
     try {
-      await api.post('/api/jobs', { title, description, budget, category })
-      setMsg('Job posted!')
-      setTitle(''); setDescription(''); setBudget(0); setCategory('')
-    } catch (e:any) { setMsg(e.response?.data?.message || 'Error') }
-  }
+      await api.post("/api/jobs", { title, description, budget, category });
+      setMsg("✅ Job posted successfully!");
+      setTitle("");
+      setDescription("");
+      setBudget("");
+      setCategory("");
+    } catch (e: any) {
+      setMsg(e.response?.data?.message || "❌ Error posting job");
+    }
+  };
 
   return (
-    <div style={{ maxWidth: 700, margin:'20px auto' }}>
-      <h2>Post a Job (Client)</h2>
-      <form onSubmit={submit} style={{ display:'grid', gap:10 }}>
-        <input placeholder="Title" value={title} onChange={e=>setTitle(e.target.value)} required />
-        <textarea placeholder="Description" value={description} onChange={e=>setDescription(e.target.value)} />
-        <input type="number" placeholder="Budget" value={budget} onChange={e=>setBudget(Number(e.target.value))} required />
-        <input placeholder="Category" value={category} onChange={e=>setCategory(e.target.value)} />
-        <button type="submit">Create</button>
-      </form>
-      {msg && <p>{msg}</p>}
-    </div>
-  )
+    <Container maxWidth="sm" sx={{ mt: 5 }}>
+      <Paper elevation={4} sx={{ p: 4, borderRadius: 2 }}>
+        <Typography variant="h5" gutterBottom align="center">
+          Post a Job (Client)
+        </Typography>
+
+        <Box
+          component="form"
+          onSubmit={submit}
+          display="flex"
+          flexDirection="column"
+          gap={2}
+        >
+          <TextField
+            label="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            fullWidth
+          />
+
+          <TextField
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            multiline
+            rows={4}
+            fullWidth
+          />
+
+          <TextField
+            label="Budget"
+            type="number"
+            value={budget}
+            onChange={(e) => setBudget(Number(e.target.value))}
+            required
+            fullWidth
+          />
+
+          <TextField
+            label="Category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            fullWidth
+          />
+
+          <Button type="submit" variant="contained" color="primary" fullWidth>
+            Create Job
+          </Button>
+        </Box>
+
+        {msg && (
+          <Alert
+            severity={msg.startsWith("✅") ? "success" : "error"}
+            sx={{ mt: 3 }}
+          >
+            {msg}
+          </Alert>
+        )}
+      </Paper>
+    </Container>
+  );
 }

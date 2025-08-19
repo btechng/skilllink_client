@@ -1,7 +1,8 @@
 // src/components/api.ts
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000"; // fallback for local dev
+const API_BASE =
+  import.meta.env.VITE_API_BASE || "https://skilllink-e12u.onrender.com"; // fallback for local dev
 
 // Create an axios instance
 const api = axios.create({
