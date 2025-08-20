@@ -118,7 +118,17 @@ export default function App() {
   };
 
   const handlePostJob = async () => {
-    if (!selectedFreelancer || !jobTitle.trim()) return;
+    if (
+      !selectedFreelancer ||
+      !jobTitle.trim() ||
+      !jobDescription.trim() ||
+      budget <= 0
+    ) {
+      setSnackbarMessage("Please fill in all job details with a valid budget.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
+    }
 
     try {
       await api.post("/api/jobs/new", {
@@ -134,6 +144,7 @@ export default function App() {
 
       setJobTitle("");
       setJobDescription("");
+      setBudget(0);
       setOpenHireModal(false);
       setSelectedFreelancer(null);
     } catch (err: any) {
@@ -203,10 +214,10 @@ export default function App() {
                   <Button
                     variant="contained"
                     sx={{
-                      bgcolor: "green.600",
+                      bgcolor: "#16a34a",
                       px: 4,
                       borderRadius: 0,
-                      "&:hover": { bgcolor: "green.700" },
+                      "&:hover": { bgcolor: "#15803d" },
                     }}
                   >
                     🔍 Search
@@ -310,8 +321,8 @@ export default function App() {
           to="/jobs"
           variant="contained"
           sx={{
-            bgcolor: "green.600",
-            "&:hover": { bgcolor: "green.700" },
+            bgcolor: "#16a34a",
+            "&:hover": { bgcolor: "#15803d" },
             px: 5,
             py: 2,
           }}
@@ -326,7 +337,7 @@ export default function App() {
           variant="h4"
           sx={{ mb: 5, fontWeight: "bold", textAlign: "center" }}
         >
-          Featured Freelancers
+          Available Freelancers
         </Typography>
         <Box
           sx={{
@@ -431,8 +442,8 @@ export default function App() {
                       }}
                       variant="contained"
                       sx={{
-                        bgcolor: "green.600",
-                        "&:hover": { bgcolor: "green.700" },
+                        bgcolor: "#16a34a",
+                        "&:hover": { bgcolor: "#15803d" },
                         mt: { xs: 1, sm: 0 },
                         width: { xs: "100%", sm: "auto" },
                       }}
@@ -463,17 +474,17 @@ export default function App() {
         <Typography variant="h4" sx={{ fontWeight: "bold", mb: 2 }}>
           .
         </Typography>
-        <Typography sx={{ mb: 5, color: "gray.400" }}>.</Typography>
+        <Typography sx={{ mb: 5 }}>.</Typography>
         <Button
           component={Link}
           to="/register"
           variant="contained"
           sx={{
-            bgcolor: "green.600",
+            bgcolor: "#16a34a",
             px: 5,
             py: 2,
             fontWeight: "bold",
-            "&:hover": { bgcolor: "green.700" },
+            "&:hover": { bgcolor: "#15803d" },
           }}
         >
           Join Now
@@ -534,15 +545,15 @@ export default function App() {
             variant="outlined"
             multiline
             rows={4}
+            sx={{ mb: 2 }}
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
           />
           <TextField
             fullWidth
-            label="Budget"
+            label="Budget ($)"
+            type="number"
             variant="outlined"
-            multiline
-            rows={4}
             value={budget}
             onChange={(e) => setBudget(Number(e.target.value))}
           />

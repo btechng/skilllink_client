@@ -62,6 +62,7 @@ const FreelancersBySkill: React.FC = () => {
     api
       .get(`/api/freelancers?skill=${encodeURIComponent(skill)}`)
       .then((res) => setFreelancers(res.data))
+      .catch((err) => console.error("Error fetching freelancers:", err))
       .finally(() => setLoading(false));
   }, [skill]);
 
@@ -86,7 +87,7 @@ const FreelancersBySkill: React.FC = () => {
       setSelectedFreelancer(null);
       showSnackbar("Message sent successfully!", "success");
     } catch (err) {
-      console.error(err);
+      console.error("Message error:", err);
       showSnackbar("Failed to send message.", "error");
     }
   };
@@ -107,7 +108,7 @@ const FreelancersBySkill: React.FC = () => {
       setSelectedFreelancer(null);
       showSnackbar("Job posted successfully!", "success");
     } catch (err) {
-      console.error(err);
+      console.error("Job error:", err);
       showSnackbar("Failed to post job.", "error");
     }
   };
@@ -144,7 +145,6 @@ const FreelancersBySkill: React.FC = () => {
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
-              cursor: "pointer",
             }}
           >
             <Avatar
