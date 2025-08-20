@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import api from "../components/api";
 import { useAuth } from "../context/useAuth";
+import { sendMessage } from "../components/api";
 
 // 🔹 Types
 type Freelancer = {
@@ -47,6 +48,7 @@ const FreelancersBySkill: React.FC = () => {
   const [openHireModal, setOpenHireModal] = useState(false);
   const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
+  const [jobBudget, setJobBudget] = useState<number | "">("");
 
   // Snackbar
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -78,7 +80,7 @@ const FreelancersBySkill: React.FC = () => {
     if (!selectedFreelancer || !message.trim()) return;
 
     try {
-      await api.post("/api/messages", {
+      await sendMessage({
         to: selectedFreelancer._id,
         content: message,
       });
@@ -100,10 +102,12 @@ const FreelancersBySkill: React.FC = () => {
       await api.post("/api/jobs", {
         title: jobTitle,
         description: jobDescription,
+        budget: jobBudget === "" ? undefined : jobBudget,
         freelancer: selectedFreelancer._id,
       });
       setJobTitle("");
       setJobDescription("");
+      setJobBudget("");
       setOpenHireModal(false);
       setSelectedFreelancer(null);
       showSnackbar("Job posted successfully!", "success");
@@ -265,8 +269,17 @@ const FreelancersBySkill: React.FC = () => {
             variant="outlined"
             multiline
             rows={4}
+            sx={{ mb: 2 }}
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
+          />
+          <TextField
+            fullWidth
+            label="Budget"
+            type="number"
+            variant="outlined"
+            value={jobBudget}
+            onChange={(e) => setJobBudget(Number(e.target.value))}
           />
         </DialogContent>
         <DialogActions>

@@ -7,7 +7,7 @@ const API_BASE =
 // Create an axios instance
 const api = axios.create({
   baseURL: API_BASE,
-  withCredentials: false, // allows sending cookies if using sessions
+  withCredentials: true, // allows sending cookies if using sessions
 });
 
 // Attach JWT token from localStorage automatically
@@ -40,6 +40,20 @@ export const updateProposalStatus = (
   proposalId: string,
   status: string
 ) => api.put(`/api/jobs/${jobId}/proposals/${proposalId}`, { status });
+
+// ---------- MESSAGES ----------
+export const sendMessage = (data: {
+  to: string;
+  content: string;
+  replyTo?: string;
+}) => api.post("/api/messages", data);
+
+export const getMessages = (userId?: string) =>
+  api.get("/api/messages", { params: userId ? { user: userId } : {} });
+
+export const getMessageById = (id: string) => api.get(`/api/messages/${id}`);
+
+export const deleteMessage = (id: string) => api.delete(`/api/messages/${id}`);
 
 // ---------- PAYMENTS (Paystack Escrow) ----------
 export const initPayment = (data: any) => api.post("/api/payments/init", data);
