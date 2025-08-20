@@ -20,7 +20,6 @@ import {
   Alert,
 } from "@mui/material";
 
-// ✅ Import category images
 import designImg from "../images/Graphics_Design.png";
 import webImg from "../images/Web_Development.png";
 import marketingImg from "../images/Digital_Marketing.png";
@@ -32,7 +31,6 @@ import lifestyleImg from "../images/Lifestyle.png";
 import heroBg from "../images/boygirl.gif";
 import ctaBg from "../images/group.gif";
 
-// 🔹 Types
 type User = {
   _id: string;
   name: string;
@@ -55,8 +53,8 @@ export default function App() {
   const [openHireModal, setOpenHireModal] = useState(false);
   const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
+  const [budget, setBudget] = useState<number>(0);
 
-  // ✅ Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
@@ -95,7 +93,6 @@ export default function App() {
     setFilteredFreelancers(filtered);
   }, [searchTerm, freelancers]);
 
-  // --- Send message ---
   const handleSendMessage = async () => {
     if (!selectedFreelancer || !message.trim()) return;
 
@@ -120,14 +117,14 @@ export default function App() {
     }
   };
 
-  // --- Post job ---
   const handlePostJob = async () => {
     if (!selectedFreelancer || !jobTitle.trim()) return;
 
     try {
-      await api.post("/api/jobs", {
+      await api.post("/api/jobs/new", {
         title: jobTitle,
         description: jobDescription,
+        budget: budget,
         freelancer: selectedFreelancer._id,
       });
 
@@ -247,9 +244,8 @@ export default function App() {
           variant="h4"
           sx={{ fontWeight: "bold", textAlign: "center", mb: 8 }}
         >
-          Popular Categories
+          Categories
         </Typography>
-
         <Box
           sx={{
             display: "grid",
@@ -265,7 +261,7 @@ export default function App() {
             <Card
               key={cat.name}
               component={Link}
-              to={`/freelancers/skills/${encodeURIComponent(cat.name)}`} // Proper URL encoding
+              to={`/freelancers/skills/${encodeURIComponent(cat.name)}`}
               sx={{
                 borderRadius: 3,
                 overflow: "hidden",
@@ -309,25 +305,19 @@ export default function App() {
         <Typography variant="h4" sx={{ mb: 3, fontWeight: "bold" }}>
           Hire a Freelancer
         </Typography>
-        {userRole === "client" ? (
-          <Button
-            component={Link}
-            to="/jobs/new"
-            variant="contained"
-            sx={{
-              bgcolor: "green.600",
-              "&:hover": { bgcolor: "green.700" },
-              px: 5,
-              py: 2,
-            }}
-          >
-            Post a Job
-          </Button>
-        ) : (
-          <Typography color="textSecondary">
-            Only clients can post jobs. Please register as a client.
-          </Typography>
-        )}
+        <Button
+          component={Link}
+          to="/jobs"
+          variant="contained"
+          sx={{
+            bgcolor: "green.600",
+            "&:hover": { bgcolor: "green.700" },
+            px: 5,
+            py: 2,
+          }}
+        >
+          Post a Job
+        </Button>
       </Box>
 
       {/* Featured Freelancers Section */}
@@ -338,13 +328,12 @@ export default function App() {
         >
           Featured Freelancers
         </Typography>
-
         <Box
           sx={{
             display: "grid",
             gridTemplateColumns: {
-              xs: "repeat(2, 1fr)",
-              sm: "repeat(3, 1fr)",
+              xs: "1fr",
+              sm: "repeat(2, 1fr)",
               md: "repeat(4, 1fr)",
             },
             gap: 3,
@@ -365,11 +354,7 @@ export default function App() {
                 justifyContent: "space-between",
                 transition: "transform 0.3s, box-shadow 0.3s",
                 cursor: "pointer",
-                "&:hover": {
-                  transform: "translateY(-5px) scale(1.03)",
-                  boxShadow: 6,
-                },
-                height: "100%", // make all cards equal height in grid
+                height: "100%",
               }}
             >
               <CardContent
@@ -377,7 +362,7 @@ export default function App() {
                   textAlign: "center",
                   display: "flex",
                   flexDirection: "column",
-                  flexGrow: 1, // stretch content
+                  flexGrow: 1,
                   justifyContent: "space-between",
                   gap: 2,
                 }}
@@ -400,7 +385,6 @@ export default function App() {
                   <Typography variant="body2" color="textSecondary">
                     {user.title}
                   </Typography>
-
                   <Box
                     sx={{
                       mt: 1,
@@ -415,14 +399,13 @@ export default function App() {
                     ))}
                   </Box>
                 </Box>
-
                 <Box
                   sx={{
                     mt: 2,
                     display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
                     justifyContent: "center",
                     gap: 1,
-                    flexWrap: "wrap",
                   }}
                 >
                   <Button
@@ -432,11 +415,13 @@ export default function App() {
                       setOpenMessageModal(true);
                     }}
                     variant="outlined"
-                    sx={{ "&:hover": { backgroundColor: "#f0f0f0" } }}
+                    sx={{
+                      width: { xs: "100%", sm: "auto" },
+                      "&:hover": { backgroundColor: "#f0f0f0" },
+                    }}
                   >
                     Connect / Message
                   </Button>
-
                   {userRole === "client" && (
                     <Button
                       onClick={(e) => {
@@ -448,6 +433,8 @@ export default function App() {
                       sx={{
                         bgcolor: "green.600",
                         "&:hover": { bgcolor: "green.700" },
+                        mt: { xs: 1, sm: 0 },
+                        width: { xs: "100%", sm: "auto" },
                       }}
                     >
                       Hire
@@ -460,7 +447,7 @@ export default function App() {
         </Box>
       </Box>
 
-      {/* Call-to-Action Section */}
+      {/* CTA Section */}
       <Box
         sx={{
           backgroundImage: `url(${ctaBg})`,
@@ -493,7 +480,7 @@ export default function App() {
         </Button>
       </Box>
 
-      {/* Connect / Message Modal */}
+      {/* Message Modal */}
       <Dialog
         open={openMessageModal}
         onClose={() => setOpenMessageModal(false)}
@@ -525,7 +512,7 @@ export default function App() {
         </DialogActions>
       </Dialog>
 
-      {/* Hire Freelancer Modal */}
+      {/* Hire Modal */}
       <Dialog
         open={openHireModal}
         onClose={() => setOpenHireModal(false)}
@@ -550,6 +537,15 @@ export default function App() {
             value={jobDescription}
             onChange={(e) => setJobDescription(e.target.value)}
           />
+          <TextField
+            fullWidth
+            label="Budget"
+            variant="outlined"
+            multiline
+            rows={4}
+            value={budget}
+            onChange={(e) => setBudget(Number(e.target.value))}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenHireModal(false)} color="secondary">
@@ -561,7 +557,7 @@ export default function App() {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for success/error */}
+      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={3000}
