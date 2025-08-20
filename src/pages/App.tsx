@@ -1,14 +1,15 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import api from "../components/api";
 import {
   Box,
   Typography,
   Button,
-  TextField,
-  InputAdornment,
   Card,
-  CardMedia,
   CardContent,
+  CardMedia,
+  Chip,
+  Avatar,
 } from "@mui/material";
 
 // ✅ Import category images
@@ -23,7 +24,19 @@ import lifestyleImg from "../images/Lifestyle.png";
 import heroBg from "../images/boygirl.gif";
 import ctaBg from "../images/group.gif";
 
-export default function HomePage() {
+// 🔹 Types
+type User = {
+  _id: string;
+  name: string;
+  title: string;
+  skills: string[];
+  profileImage: string;
+};
+
+export default function App() {
+  const [freelancers, setFreelancers] = useState<User[]>([]);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
   const categories = [
     { name: "Graphics & Design", img: designImg },
     { name: "Web Development", img: webImg },
@@ -34,6 +47,12 @@ export default function HomePage() {
     { name: "Business", img: businessImg },
     { name: "Lifestyle", img: lifestyleImg },
   ];
+
+  useEffect(() => {
+    api.get("/api/users/freelancers").then((res) => setFreelancers(res.data));
+    const role = localStorage.getItem("role");
+    setUserRole(role);
+  }, []);
 
   return (
     <Box sx={{ fontFamily: "Inter, system-ui" }}>
@@ -68,108 +87,55 @@ export default function HomePage() {
         <Typography variant="h6" sx={{ opacity: 0.9, mb: 5 }}>
           Skilled professionals across design, tech, marketing, and more.
         </Typography>
-
-        {/* Search Bar */}
-        <Box
-          sx={{
-            maxWidth: 600,
-            mx: "auto",
-            display: "flex",
-            alignItems: "center",
-            bgcolor: "white",
-            borderRadius: 50,
-            overflow: "hidden",
-            boxShadow: 3,
-          }}
-        >
-          <TextField
-            fullWidth
-            placeholder="Try 'Web Developer'"
-            variant="outlined"
-            InputProps={{
-              sx: { borderRadius: 0, pl: 2 },
-              endAdornment: (
-                <InputAdornment position="end">
-                  <Button
-                    variant="contained"
-                    sx={{
-                      bgcolor: "green.600",
-                      px: 4,
-                      borderRadius: 0,
-                      "&:hover": { bgcolor: "green.700" },
-                    }}
-                  >
-                    🔍 Search
-                  </Button>
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
-
-        {/* CTA Button */}
-        <Box sx={{ mt: 6 }}>
-          <Button
-            component={Link}
-            to="/register"
-            variant="contained"
-            sx={{
-              bgcolor: "yellow",
-              color: "black",
-              fontWeight: "bold",
-              px: 4,
-              py: 1.5,
-              borderRadius: 2,
-              "&:hover": { bgcolor: "gold" },
-            }}
-          >
-            Get Started
-          </Button>
-        </Box>
       </Box>
 
-      {/* Categories Section using Flexbox */}
-      <Box sx={{ maxWidth: "1200px", mx: "auto", py: 12, px: 3 }}>
+      {/* Categories Section */}
+      <Box sx={{ maxWidth: "1200px", mx: "auto", py: 8, px: 3 }}>
         <Typography
           variant="h4"
-          sx={{ fontWeight: "bold", textAlign: "center", mb: 8 }}
+          sx={{ fontWeight: "bold", textAlign: "center", mb: 5 }}
         >
           Popular Categories
         </Typography>
-
         <Box
           sx={{
             display: "flex",
             flexWrap: "wrap",
             justifyContent: "center",
-            gap: 4,
+            gap: 3,
           }}
         >
           {categories.map((cat) => (
             <Card
               key={cat.name}
               sx={{
-                width: { xs: "45%", md: "23%" },
+                width: { xs: "48%", sm: "32%", md: "23%" },
                 borderRadius: 3,
                 overflow: "hidden",
                 boxShadow: 2,
-                transition: "0.3s",
-                "&:hover": { boxShadow: 6 },
+                transition: "0.3s ease-in-out",
+                cursor: "pointer",
+                "&:hover": { boxShadow: 6, transform: "scale(1.05)" },
               }}
             >
               <CardMedia
                 component="img"
-                height="150"
                 image={cat.img}
                 alt={cat.name}
                 sx={{
+                  width: "100%",
+                  height: { xs: 100, sm: 120, md: 150 },
+                  objectFit: "cover",
                   transition: "0.4s",
-                  "&:hover": { transform: "scale(1.05)" },
                 }}
               />
-              <CardContent sx={{ textAlign: "center" }}>
+              <CardContent sx={{ textAlign: "center", py: 1 }}>
                 <Typography
-                  sx={{ fontWeight: "600", "&:hover": { color: "green" } }}
+                  sx={{
+                    fontWeight: "600",
+                    fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1rem" },
+                    "&:hover": { color: "green" },
+                  }}
                 >
                   {cat.name}
                 </Typography>
@@ -179,7 +145,112 @@ export default function HomePage() {
         </Box>
       </Box>
 
-      {/* Call-to-Action Section */}
+      {/* Post Job Section */}
+      <Box sx={{ textAlign: "center", py: 8, px: 3, bgcolor: "#f5f5f5" }}>
+        <Typography variant="h4" sx={{ mb: 3, fontWeight: "bold" }}>
+          Hire a Freelancer
+        </Typography>
+        {userRole === "client" ? (
+          <Button
+            component={Link}
+            to="/jobs/new"
+            variant="contained"
+            sx={{
+              bgcolor: "green.600",
+              "&:hover": { bgcolor: "green.700" },
+              px: 5,
+              py: 2,
+            }}
+          >
+            Post a Job
+          </Button>
+        ) : (
+          <Typography color="textSecondary">
+            Only clients can post jobs. Please register as a client.
+          </Typography>
+        )}
+      </Box>
+
+      {/* Featured Freelancers Section */}
+      <Box sx={{ maxWidth: "1200px", mx: "auto", py: 8, px: 3 }}>
+        <Typography
+          variant="h4"
+          sx={{ mb: 5, fontWeight: "bold", textAlign: "center" }}
+        >
+          Featured Freelancers
+        </Typography>
+
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: 3,
+          }}
+        >
+          {freelancers.slice(0, 8).map((user) => (
+            <Card
+              key={user._id}
+              sx={{
+                width: { xs: "48%", sm: "32%", md: "23%" },
+                borderRadius: 3,
+                boxShadow: 2,
+                transition: "transform 0.3s, box-shadow 0.3s",
+                cursor: "pointer",
+                "&:hover": {
+                  transform: "translateY(-5px) scale(1.03)",
+                  boxShadow: 6,
+                },
+              }}
+            >
+              <CardContent sx={{ textAlign: "center" }}>
+                <Avatar
+                  src={user.profileImage}
+                  sx={{
+                    width: 70,
+                    height: 70,
+                    mx: "auto",
+                    mb: 1,
+                    transition: "0.3s",
+                    "&:hover": { transform: "scale(1.1)" },
+                  }}
+                />
+                <Typography sx={{ fontWeight: "600" }}>{user.name}</Typography>
+                <Typography variant="body2" color="textSecondary">
+                  {user.title}
+                </Typography>
+
+                <Box
+                  sx={{
+                    mt: 1,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    justifyContent: "center",
+                    gap: 0.5,
+                  }}
+                >
+                  {user.skills.slice(0, 3).map((skill) => (
+                    <Chip key={skill} label={skill} size="small" />
+                  ))}
+                </Box>
+
+                <Button
+                  component={Link}
+                  to={`/freelancers/${user._id}`}
+                  variant="outlined"
+                  sx={{
+                    mt: 2,
+                    transition: "0.3s",
+                    "&:hover": { backgroundColor: "#f0f0f0" },
+                  }}
+                >
+                  Connect
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
+      </Box>
       <Box
         sx={{
           backgroundImage: `url(${ctaBg})`,

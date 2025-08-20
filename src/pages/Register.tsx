@@ -10,10 +10,12 @@ import {
   Step,
   StepLabel,
   Avatar,
+  InputAdornment,
 } from "@mui/material";
 import { Formik, Form, FormikHelpers, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { registerUser } from "../components/api"; // ✅ use api.ts helper
+import { registerUser } from "../components/api";
+import { useNavigate } from "react-router-dom";
 
 // 🔹 Helper ErrorText Component
 const ErrorText: React.FC<{ name: string }> = ({ name }) => (
@@ -27,11 +29,11 @@ const ErrorText: React.FC<{ name: string }> = ({ name }) => (
   />
 );
 
-// 🔹 Form value types
 interface RegisterFormValues {
   name: string;
   email: string;
   password: string;
+  confirmPassword: string;
   role: "freelancer" | "client";
   phone: string;
   country: string;
@@ -50,11 +52,11 @@ interface RegisterFormValues {
   teamSize: string;
 }
 
-// 🔹 Initial values
 const initialValues: RegisterFormValues = {
   name: "",
   email: "",
   password: "",
+  confirmPassword: "",
   role: "freelancer",
   phone: "",
   country: "",
@@ -73,12 +75,13 @@ const initialValues: RegisterFormValues = {
   teamSize: "",
 };
 
-// 🔹 Yup validation
 const validationSchema = Yup.object({
   name: Yup.string().required("Required"),
   email: Yup.string().email("Invalid email").required("Required"),
   password: Yup.string().min(6, "At least 6 characters").required("Required"),
-  phone: Yup.string().required("Required"),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref("password")], "Passwords must match")
+    .required("Required"),
 });
 
 const steps = ["General Info", "Role Details", "Review & Submit"];
@@ -86,6 +89,9 @@ const steps = ["General Info", "Role Details", "Review & Submit"];
 export default function Register() {
   const [activeStep, setActiveStep] = useState(0);
   const [msg, setMsg] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (
     values: RegisterFormValues,
@@ -97,7 +103,6 @@ export default function Register() {
       return;
     }
 
-    // ✅ Build payload
     const payload = {
       ...values,
       skills: values.skills
@@ -112,11 +117,18 @@ export default function Register() {
     };
 
     try {
-      const { data } = await registerUser(payload); // ✅ use api helper
+      const { data } = await registerUser(payload);
       localStorage.setItem("token", data.token);
-      setMsg("✅ Registered successfully! You can now log in.");
+      setMsg("✅ Registered successfully! Redirecting to dashboard...");
+
+      // Redirect after a short delay
+      setTimeout(() => navigate("/dashboard"), 1500);
     } catch (e: any) {
-      setMsg(e.response?.data?.message || "❌ Registration failed");
+      const errorMsg =
+        e.response?.data?.errors?.map((err: any) => err.msg).join(", ") ||
+        e.response?.data?.message ||
+        "❌ Registration failed";
+      setMsg(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -161,159 +173,230 @@ export default function Register() {
       >
         {({ values, handleChange, setFieldValue, isSubmitting }) => (
           <Form>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
-                flexWrap: "wrap",
-                gap: 2,
-              }}
-            >
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
               {/* Step 1: General Info */}
               {activeStep === 0 && (
                 <>
-                  {[
-                    "name",
-                    "email",
-                    "password",
-                    "phone",
-                    "country",
-                    "city",
-                  ].map((field) => (
-                    <Box sx={{ flex: "1 1 100%" }} key={field}>
-                      <TextField
-                        fullWidth
-                        label={field.charAt(0).toUpperCase() + field.slice(1)}
-                        name={field}
-                        type={field === "password" ? "password" : "text"}
-                        value={values[field as keyof RegisterFormValues]}
-                        onChange={handleChange}
-                      />
-                      <ErrorText name={field} />
-                    </Box>
-                  ))}
+                  <TextField
+                    fullWidth
+                    label="Name"
+                    name="name"
+                    value={values.name}
+                    onChange={handleChange}
+                  />
+                  <ErrorText name="name" />
 
-                  <Box sx={{ flex: "1 1 100%" }}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Role"
-                      name="role"
-                      value={values.role}
-                      onChange={handleChange}
-                    >
-                      <MenuItem value="freelancer">Freelancer</MenuItem>
-                      <MenuItem value="client">Client</MenuItem>
-                    </TextField>
-                  </Box>
+                  <TextField
+                    fullWidth
+                    label="Email"
+                    name="email"
+                    type="email"
+                    value={values.email}
+                    onChange={handleChange}
+                  />
+                  <ErrorText name="email" />
 
-                  <Box sx={{ flex: "1 1 100%", mt: 1 }}>
-                    <Button
-                      variant="outlined"
-                      component="label"
-                      sx={{
-                        background: "linear-gradient(120deg, #ffffff, #f0f0f0)",
-                        transition: "0.3s",
-                        "&:hover": {
-                          background:
-                            "linear-gradient(120deg, #a8e6cf, #dcedc1)",
-                        },
-                      }}
-                    >
-                      📸 Upload Profile Image
-                      <input
-                        type="file"
-                        hidden
-                        accept="image/*"
-                        onChange={(e) => uploadImage(e, setFieldValue)}
-                      />
-                    </Button>
-                    {values.profileImage && (
-                      <Avatar
-                        src={values.profileImage}
-                        sx={{ width: 60, height: 60, mt: 1 }}
-                      />
-                    )}
-                  </Box>
+                  {/* Password Field */}
+                  <TextField
+                    fullWidth
+                    label="Password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={values.password}
+                    onChange={handleChange}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Box
+                            sx={{ cursor: "pointer", fontSize: "1.2rem" }}
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? "🙈" : "👁️"}
+                          </Box>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                  <ErrorText name="password" />
+
+                  {/* Confirm Password Field */}
+                  <TextField
+                    fullWidth
+                    label="Confirm Password"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={values.confirmPassword}
+                    onChange={handleChange}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <Box
+                            sx={{ cursor: "pointer", fontSize: "1.2rem" }}
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
+                          >
+                            {showConfirmPassword ? "🙈" : "👁️"}
+                          </Box>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                  <ErrorText name="confirmPassword" />
+
+                  <TextField
+                    fullWidth
+                    label="Phone"
+                    name="phone"
+                    value={values.phone}
+                    onChange={handleChange}
+                  />
+                  <ErrorText name="phone" />
+
+                  <TextField
+                    fullWidth
+                    label="Country"
+                    name="country"
+                    value={values.country}
+                    onChange={handleChange}
+                  />
+                  <TextField
+                    fullWidth
+                    label="City"
+                    name="city"
+                    value={values.city}
+                    onChange={handleChange}
+                  />
+
+                  <TextField
+                    select
+                    fullWidth
+                    label="Role"
+                    name="role"
+                    value={values.role}
+                    onChange={handleChange}
+                  >
+                    <MenuItem value="freelancer">Freelancer</MenuItem>
+                    <MenuItem value="client">Client</MenuItem>
+                  </TextField>
+
+                  <Button variant="outlined" component="label">
+                    📸 Upload Profile Image
+                    <input
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={(e) => uploadImage(e, setFieldValue)}
+                    />
+                  </Button>
+                  {values.profileImage && (
+                    <Avatar
+                      src={values.profileImage}
+                      sx={{ width: 60, height: 60 }}
+                    />
+                  )}
                 </>
               )}
 
               {/* Step 2: Role-specific */}
               {activeStep === 1 && values.role === "freelancer" && (
                 <>
-                  {[
-                    "title",
-                    "bio",
-                    "skills",
-                    "portfolioLinks",
-                    "languages",
-                  ].map((field) => (
-                    <Box sx={{ flex: "1 1 100%" }} key={field}>
-                      <TextField
-                        fullWidth
-                        multiline={field === "bio"}
-                        rows={field === "bio" ? 3 : 1}
-                        label={field.charAt(0).toUpperCase() + field.slice(1)}
-                        name={field}
-                        value={values[field as keyof RegisterFormValues]}
-                        onChange={handleChange}
-                      />
-                    </Box>
-                  ))}
-                  <Box sx={{ flex: { xs: "1 1 100%", sm: "1 1 45%" } }}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Experience Level"
-                      name="experienceLevel"
-                      value={values.experienceLevel}
-                      onChange={handleChange}
-                    >
-                      <MenuItem value="beginner">Beginner</MenuItem>
-                      <MenuItem value="intermediate">Intermediate</MenuItem>
-                      <MenuItem value="expert">Expert</MenuItem>
-                    </TextField>
-                  </Box>
-                  <Box sx={{ flex: { xs: "1 1 100%", sm: "1 1 45%" } }}>
-                    <TextField
-                      fullWidth
-                      type="number"
-                      label="Hourly Rate ($)"
-                      name="hourlyRate"
-                      value={values.hourlyRate}
-                      onChange={handleChange}
-                    />
-                  </Box>
+                  <TextField
+                    fullWidth
+                    label="Title"
+                    name="title"
+                    value={values.title}
+                    onChange={handleChange}
+                  />
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    label="Bio"
+                    name="bio"
+                    value={values.bio}
+                    onChange={handleChange}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Skills (comma separated)"
+                    name="skills"
+                    value={values.skills}
+                    onChange={handleChange}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Portfolio Links"
+                    name="portfolioLinks"
+                    value={values.portfolioLinks}
+                    onChange={handleChange}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Languages"
+                    name="languages"
+                    value={values.languages}
+                    onChange={handleChange}
+                  />
+                  <TextField
+                    fullWidth
+                    select
+                    label="Experience Level"
+                    name="experienceLevel"
+                    value={values.experienceLevel}
+                    onChange={handleChange}
+                  >
+                    <MenuItem value="beginner">Beginner</MenuItem>
+                    <MenuItem value="intermediate">Intermediate</MenuItem>
+                    <MenuItem value="expert">Expert</MenuItem>
+                  </TextField>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label="Hourly Rate"
+                    name="hourlyRate"
+                    value={values.hourlyRate}
+                    onChange={handleChange}
+                  />
                 </>
               )}
 
               {activeStep === 1 && values.role === "client" && (
                 <>
-                  {[
-                    "companyName",
-                    "companyWebsite",
-                    "industry",
-                    "teamSize",
-                  ].map((field) => (
-                    <Box
-                      sx={{ flex: { xs: "1 1 100%", sm: "1 1 45%" } }}
-                      key={field}
-                    >
-                      <TextField
-                        fullWidth
-                        label={field}
-                        name={field}
-                        value={values[field as keyof RegisterFormValues]}
-                        onChange={handleChange}
-                      />
-                    </Box>
-                  ))}
+                  <TextField
+                    fullWidth
+                    label="Company Name"
+                    name="companyName"
+                    value={values.companyName}
+                    onChange={handleChange}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Company Website"
+                    name="companyWebsite"
+                    value={values.companyWebsite}
+                    onChange={handleChange}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Industry"
+                    name="industry"
+                    value={values.industry}
+                    onChange={handleChange}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Team Size"
+                    name="teamSize"
+                    value={values.teamSize}
+                    onChange={handleChange}
+                  />
                 </>
               )}
 
               {/* Step 3: Review */}
               {activeStep === 2 && (
-                <Box sx={{ flex: "1 1 100%" }}>
+                <Box>
                   <Typography variant="h6">Review Your Details:</Typography>
                   <pre>{JSON.stringify(values, null, 2)}</pre>
                 </Box>
@@ -322,7 +405,6 @@ export default function Register() {
               {/* Buttons */}
               <Box
                 sx={{
-                  flex: "1 1 100%",
                   display: "flex",
                   justifyContent: "space-between",
                   mt: 2,
@@ -331,25 +413,10 @@ export default function Register() {
                 <Button
                   onClick={() => setActiveStep((s) => s - 1)}
                   disabled={activeStep === 0}
-                  sx={{
-                    background: "linear-gradient(120deg, #ffffff, #f0f0f0)",
-                    "&:hover": {
-                      background: "linear-gradient(120deg, #ffd3b6, #ffaaa5)",
-                    },
-                  }}
                 >
                   🔙 Back
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  sx={{
-                    background: "linear-gradient(120deg, #a8e6cf, #dcedc1)",
-                    "&:hover": {
-                      background: "linear-gradient(120deg, #81c784, #66bb6a)",
-                    },
-                  }}
-                >
+                <Button type="submit" disabled={isSubmitting}>
                   {activeStep === steps.length - 1 ? "✅ Submit" : "➡ Next"}
                 </Button>
               </Box>

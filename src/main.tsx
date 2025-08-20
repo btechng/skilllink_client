@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
 
 import App from "./pages/App";
 import Login from "./pages/Login";
@@ -14,6 +15,7 @@ import Proposals from "./pages/Proposals";
 import Wallet from "./pages/Wallet";
 import Admin from "./pages/Admin";
 import Layout from "./components/Layout";
+import FreelancerProfile from "./pages/FreelancerProfile"; // ✅ New page
 
 const router = createBrowserRouter([
   {
@@ -31,12 +33,15 @@ const router = createBrowserRouter([
       { path: "jobs/:id/proposals", element: <Proposals /> },
       { path: "wallet", element: <Wallet /> },
       { path: "admin", element: <Admin /> },
+      { path: "freelancers/:id", element: <FreelancerProfile /> }, // ✅ Added
     ],
   },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </React.StrictMode>
 );
