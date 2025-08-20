@@ -16,6 +16,7 @@ import Wallet from "./pages/Wallet";
 import Admin from "./pages/Admin";
 import Layout from "./components/Layout";
 import FreelancerProfile from "./pages/FreelancerProfile"; // ✅ New page
+import FreelancersBySkill from "./pages/FreelancersBySkill";
 
 const router = createBrowserRouter([
   {
@@ -33,7 +34,8 @@ const router = createBrowserRouter([
       { path: "jobs/:id/proposals", element: <Proposals /> },
       { path: "wallet", element: <Wallet /> },
       { path: "admin", element: <Admin /> },
-      { path: "freelancers/:id", element: <FreelancerProfile /> }, // ✅ Added
+      { path: "freelancers/:id", element: <FreelancerProfile /> },
+      { path: "freelancers/skills/:skill", element: <FreelancersBySkill /> },
     ],
   },
 ]);

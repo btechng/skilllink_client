@@ -16,6 +16,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 
 // ✅ Import category images
@@ -54,6 +56,13 @@ export default function App() {
   const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
 
+  // ✅ Snackbar state
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
+    "success"
+  );
+
   const categories = [
     { name: "Graphics & Design", img: designImg },
     { name: "Web Development", img: webImg },
@@ -74,7 +83,6 @@ export default function App() {
     setUserRole(role);
   }, []);
 
-  // ✅ Live search filter
   useEffect(() => {
     const filtered = freelancers.filter(
       (f) =>
@@ -87,43 +95,56 @@ export default function App() {
     setFilteredFreelancers(filtered);
   }, [searchTerm, freelancers]);
 
-  const handleOpenMessage = (user: User) => {
-    setSelectedFreelancer(user);
-    setOpenMessageModal(true);
+  // --- Send message ---
+  const handleSendMessage = async () => {
+    if (!selectedFreelancer || !message.trim()) return;
+
+    try {
+      await api.post("/api/messages", {
+        to: selectedFreelancer._id,
+        content: message,
+      });
+
+      setSnackbarMessage("Message sent successfully!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+
+      setMessage("");
+      setOpenMessageModal(false);
+      setSelectedFreelancer(null);
+    } catch (err: any) {
+      console.error(err);
+      setSnackbarMessage("Failed to send message.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
   };
 
-  const handleSendMessage = () => {
-    console.log(
-      "Message sent to:",
-      selectedFreelancer?._id,
-      "Message:",
-      message
-    );
-    setMessage("");
-    setOpenMessageModal(false);
-    setSelectedFreelancer(null);
-    // TODO: POST API call for sending message
-  };
+  // --- Post job ---
+  const handlePostJob = async () => {
+    if (!selectedFreelancer || !jobTitle.trim()) return;
 
-  const handleOpenHire = (user: User) => {
-    setSelectedFreelancer(user);
-    setOpenHireModal(true);
-  };
+    try {
+      await api.post("/api/jobs", {
+        title: jobTitle,
+        description: jobDescription,
+        freelancer: selectedFreelancer._id,
+      });
 
-  const handlePostJob = () => {
-    console.log(
-      "Post job to:",
-      selectedFreelancer?._id,
-      "Title:",
-      jobTitle,
-      "Description:",
-      jobDescription
-    );
-    setJobTitle("");
-    setJobDescription("");
-    setOpenHireModal(false);
-    setSelectedFreelancer(null);
-    // TODO: POST API call to create job for freelancer
+      setSnackbarMessage("Job posted successfully!");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+
+      setJobTitle("");
+      setJobDescription("");
+      setOpenHireModal(false);
+      setSelectedFreelancer(null);
+    } catch (err: any) {
+      console.error(err);
+      setSnackbarMessage("Failed to post job.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    }
   };
 
   return (
@@ -228,22 +249,29 @@ export default function App() {
         >
           Popular Categories
         </Typography>
+
         <Box
           sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "repeat(2, 1fr)",
+              sm: "repeat(3, 1fr)",
+              md: "repeat(4, 1fr)",
+            },
             gap: 3,
           }}
         >
           {categories.map((cat) => (
             <Card
               key={cat.name}
+              component={Link}
+              to={`/freelancers/skills/${encodeURIComponent(cat.name)}`} // Proper URL encoding
               sx={{
-                width: { xs: "48%", sm: "32%", md: "23%" }, // 2 per row on mobile
                 borderRadius: 3,
                 overflow: "hidden",
                 boxShadow: 2,
+                textDecoration: "none",
+                color: "inherit",
                 transition: "0.3s ease-in-out",
                 cursor: "pointer",
                 "&:hover": { boxShadow: 6, transform: "scale(1.05)" },
@@ -310,57 +338,82 @@ export default function App() {
         >
           Featured Freelancers
         </Typography>
+
         <Box
           sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "repeat(2, 1fr)",
+              sm: "repeat(3, 1fr)",
+              md: "repeat(4, 1fr)",
+            },
             gap: 3,
           }}
         >
           {filteredFreelancers.slice(0, 8).map((user) => (
             <Card
               key={user._id}
+              component={Link}
+              to={`/freelancers/${user._id}`}
               sx={{
-                width: { xs: "48%", sm: "32%", md: "23%" },
                 borderRadius: 3,
                 boxShadow: 2,
+                textDecoration: "none",
+                color: "inherit",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
                 transition: "transform 0.3s, box-shadow 0.3s",
                 cursor: "pointer",
                 "&:hover": {
                   transform: "translateY(-5px) scale(1.03)",
                   boxShadow: 6,
                 },
+                height: "100%", // make all cards equal height in grid
               }}
             >
-              <CardContent sx={{ textAlign: "center" }}>
-                <Avatar
-                  src={user.profileImage}
-                  sx={{
-                    width: 70,
-                    height: 70,
-                    mx: "auto",
-                    mb: 1,
-                    transition: "0.3s",
-                    "&:hover": { transform: "scale(1.1)" },
-                  }}
-                />
-                <Typography sx={{ fontWeight: "600" }}>{user.name}</Typography>
-                <Typography variant="body2" color="textSecondary">
-                  {user.title}
-                </Typography>
-                <Box
-                  sx={{
-                    mt: 1,
-                    display: "flex",
-                    flexWrap: "wrap",
-                    justifyContent: "center",
-                    gap: 0.5,
-                  }}
-                >
-                  {user.skills.slice(0, 3).map((skill) => (
-                    <Chip key={skill} label={skill} size="small" />
-                  ))}
+              <CardContent
+                sx={{
+                  textAlign: "center",
+                  display: "flex",
+                  flexDirection: "column",
+                  flexGrow: 1, // stretch content
+                  justifyContent: "space-between",
+                  gap: 2,
+                }}
+              >
+                <Box>
+                  <Avatar
+                    src={user.profileImage}
+                    sx={{
+                      width: 70,
+                      height: 70,
+                      mx: "auto",
+                      mb: 1,
+                      transition: "0.3s",
+                      "&:hover": { transform: "scale(1.1)" },
+                    }}
+                  />
+                  <Typography sx={{ fontWeight: "600" }}>
+                    {user.name}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    {user.title}
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      mt: 1,
+                      display: "flex",
+                      flexWrap: "wrap",
+                      justifyContent: "center",
+                      gap: 0.5,
+                    }}
+                  >
+                    {user.skills.slice(0, 3).map((skill) => (
+                      <Chip key={skill} label={skill} size="small" />
+                    ))}
+                  </Box>
                 </Box>
 
                 <Box
@@ -369,10 +422,12 @@ export default function App() {
                     display: "flex",
                     justifyContent: "center",
                     gap: 1,
+                    flexWrap: "wrap",
                   }}
                 >
                   <Button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
                       setSelectedFreelancer(user);
                       setOpenMessageModal(true);
                     }}
@@ -384,7 +439,8 @@ export default function App() {
 
                   {userRole === "client" && (
                     <Button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
                         setSelectedFreelancer(user);
                         setOpenHireModal(true);
                       }}
@@ -504,6 +560,22 @@ export default function App() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar for success/error */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

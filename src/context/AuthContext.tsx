@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import api from "../components/api";
 
-type User = {
+export type User = {
   _id: string;
   name: string;
   email: string;
@@ -10,11 +10,10 @@ type User = {
   title?: string;
   role?: string;
   bio?: string;
-  experienceLevel: string;
-  hourlyRate: number;
-  portfolioLinks: string;
-  languages: string;
-  // add other fields as needed
+  experienceLevel?: string;
+  hourlyRate?: number;
+  portfolioLinks?: string;
+  languages?: string;
 };
 
 type AuthContextType = {
@@ -29,7 +28,9 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
 });
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -53,4 +54,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+// HMR-safe export
+export const useAuth = (): AuthContextType => useContext(AuthContext);

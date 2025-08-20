@@ -1,5 +1,6 @@
+// src/components/Layout.tsx
 import React from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -12,8 +13,11 @@ import {
   ListItem,
   ListItemText,
 } from "@mui/material";
+import { useAuth } from "../context/AuthContext";
 
-export default function Layout() {
+const Layout: React.FC = () => {
+  const { user, setUser } = useAuth();
+  const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const location = useLocation();
 
@@ -24,7 +28,6 @@ export default function Layout() {
     { name: "Wallet", path: "/wallet" },
   ];
 
-  // ✅ Subtle gradient hover effect
   const gradientHover = {
     background: "linear-gradient(90deg, #10B981, #059669)",
     color: "white",
@@ -32,12 +35,17 @@ export default function Layout() {
     transition: "0.3s",
   };
 
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+  };
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      {/* Navbar */}
       <AppBar position="sticky" color="default" elevation={3}>
         <Toolbar sx={{ justifyContent: "space-between" }}>
-          {/* Logo */}
           <Typography
             component={Link}
             to="/"
@@ -51,7 +59,6 @@ export default function Layout() {
             SkillLink 💼
           </Typography>
 
-          {/* Desktop Links */}
           <Box
             sx={{
               display: { xs: "none", md: "flex" },
@@ -74,31 +81,47 @@ export default function Layout() {
               </Button>
             ))}
 
-            <Button
-              component={Link}
-              to="/login"
-              sx={{
-                textTransform: "none",
-                "&:hover": gradientHover,
-              }}
-            >
-              Login 👤
-            </Button>
-            <Button
-              component={Link}
-              to="/register"
-              sx={{
-                textTransform: "none",
-                bgcolor: "green.600",
-                color: "white",
-                "&:hover": gradientHover,
-              }}
-            >
-              Sign Up ✨
-            </Button>
+            {user ? (
+              <>
+                <Button
+                  component={Link}
+                  to="/dashboard"
+                  sx={{ textTransform: "none", "&:hover": gradientHover }}
+                >
+                  Profile 👤
+                </Button>
+                <Button
+                  onClick={handleLogout}
+                  sx={{ textTransform: "none", "&:hover": gradientHover }}
+                >
+                  Logout 🚪
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  component={Link}
+                  to="/login"
+                  sx={{ textTransform: "none", "&:hover": gradientHover }}
+                >
+                  Login 👤
+                </Button>
+                <Button
+                  component={Link}
+                  to="/register"
+                  sx={{
+                    textTransform: "none",
+                    bgcolor: "green.600",
+                    color: "blue",
+                    "&:hover": gradientHover,
+                  }}
+                >
+                  Sign Up ✨
+                </Button>
+              </>
+            )}
           </Box>
 
-          {/* Mobile Menu Button */}
           <IconButton
             sx={{ display: { xs: "flex", md: "none" } }}
             onClick={() => setDrawerOpen(true)}
@@ -110,7 +133,6 @@ export default function Layout() {
         </Toolbar>
       </AppBar>
 
-      {/* Mobile Drawer */}
       <Drawer
         anchor="right"
         open={drawerOpen}
@@ -134,38 +156,62 @@ export default function Layout() {
                 <ListItemText primary={link.name} />
               </ListItem>
             ))}
-            <ListItem
-              component={Link}
-              to="/login"
-              onClick={() => setDrawerOpen(false)}
-              sx={{ "&:hover": gradientHover, borderRadius: 1, mb: 1 }}
-            >
-              <ListItemText primary="Login 👤" />
-            </ListItem>
-            <ListItem
-              component={Link}
-              to="/register"
-              onClick={() => setDrawerOpen(false)}
-              sx={{
-                bgcolor: "green.600",
-                color: "white",
-                borderRadius: 1,
-                "&:hover": gradientHover,
-                textAlign: "center",
-              }}
-            >
-              <ListItemText primary="Sign Up ✨" />
-            </ListItem>
+
+            {user ? (
+              <>
+                <ListItem
+                  component={Link}
+                  to="/dashboard"
+                  onClick={() => setDrawerOpen(false)}
+                  sx={{ "&:hover": gradientHover, borderRadius: 1, mb: 1 }}
+                >
+                  <ListItemText primary="Profile 👤" />
+                </ListItem>
+                <ListItem
+                  onClick={() => {
+                    handleLogout();
+                    setDrawerOpen(false);
+                  }}
+                  sx={{ "&:hover": gradientHover, borderRadius: 1, mb: 1 }}
+                >
+                  <ListItemText primary="Logout 🚪" />
+                </ListItem>
+              </>
+            ) : (
+              <>
+                <ListItem
+                  component={Link}
+                  to="/login"
+                  onClick={() => setDrawerOpen(false)}
+                  sx={{ "&:hover": gradientHover, borderRadius: 1, mb: 1 }}
+                >
+                  <ListItemText primary="Login 👤" />
+                </ListItem>
+                <ListItem
+                  component={Link}
+                  to="/register"
+                  onClick={() => setDrawerOpen(false)}
+                  sx={{
+                    bgcolor: "green.600",
+                    color: "blue",
+                    borderRadius: 1,
+                    "&:hover": gradientHover,
+                    textAlign: "center",
+                  }}
+                >
+                  <ListItemText primary="Sign Up ✨" />
+                </ListItem>
+              </>
+            )}
           </List>
         </Box>
       </Drawer>
 
-      {/* Page Content */}
       <Box component="main" sx={{ flexGrow: 1 }}>
         <Outlet />
       </Box>
 
-      {/* Footer */}
+      {/* Footer (unchanged) */}
       <Box
         component="footer"
         sx={{
@@ -315,4 +361,6 @@ export default function Layout() {
       </Box>
     </Box>
   );
-}
+};
+
+export default Layout;

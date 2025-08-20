@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// src/pages/Login.tsx
+import React, { useState, useEffect } from "react";
 import {
   Container,
   TextField,
@@ -7,41 +8,43 @@ import {
   Box,
   Alert,
   Paper,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import api from "../components/api";
 import { useAuth } from "../context/AuthContext";
 
-export default function Login() {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+const Login: React.FC = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const { setUser } = useAuth();
+  const { user, setUser } = useAuth();
   const navigate = useNavigate();
 
-  async function submit(e: React.FormEvent<HTMLFormElement>) {
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) navigate("/dashboard");
+  }, [user, navigate]);
+
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMsg(null);
 
     try {
-      // ✅ Use api helper from api.ts
       const { data } = await api.post("/api/auth/login", { email, password });
 
-      // Store token
       localStorage.setItem("token", data.token);
-
-      // Update global user state
+      localStorage.setItem("user", JSON.stringify(data.user));
       setUser(data.user);
 
-      // Success message
       setMsg("✅ Logged in successfully!");
-
-      // Navigate to dashboard
       navigate("/dashboard");
     } catch (e: any) {
       setMsg(e.response?.data?.message || "❌ Error logging in");
     }
-  }
+  };
 
   return (
     <Container maxWidth="xs" sx={{ mt: 8 }}>
@@ -60,13 +63,26 @@ export default function Login() {
               fullWidth
               required
             />
+
             <TextField
               label="Password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               fullWidth
               required
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Button
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      sx={{ minWidth: "auto", p: 0 }}
+                    >
+                      {showPassword ? "🙈" : "👁️"}
+                    </Button>
+                  </InputAdornment>
+                ),
+              }}
             />
 
             <Button type="submit" variant="contained" color="primary" fullWidth>
@@ -99,4 +115,6 @@ export default function Login() {
       </Paper>
     </Container>
   );
-}
+};
+
+export default Login;
