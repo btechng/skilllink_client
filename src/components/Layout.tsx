@@ -13,7 +13,7 @@ import {
   ListItem,
   ListItemText,
 } from "@mui/material";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 const Layout: React.FC = () => {
   const { user, setUser } = useAuth();
@@ -44,10 +44,8 @@ const Layout: React.FC = () => {
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      {/* Navbar */}
       <AppBar position="sticky" color="default" elevation={3}>
         <Toolbar sx={{ justifyContent: "space-between" }}>
-          {/* Logo */}
           <Typography
             component={Link}
             to="/"
@@ -61,7 +59,6 @@ const Layout: React.FC = () => {
             SkillLink 💼
           </Typography>
 
-          {/* Desktop Links */}
           <Box
             sx={{
               display: { xs: "none", md: "flex" },
@@ -125,133 +122,103 @@ const Layout: React.FC = () => {
             )}
           </Box>
 
-          {/* Mobile Menu Button */}
           <IconButton
-            sx={{ display: { xs: "flex", md: "none" }, color: "green" }}
+            sx={{ display: { xs: "flex", md: "none" } }}
             onClick={() => setDrawerOpen(true)}
           >
-            <span style={{ fontSize: "1.5rem" }}>☰</span>
+            <span role="img" aria-label="menu">
+              ☰
+            </span>
           </IconButton>
         </Toolbar>
       </AppBar>
 
-      {/* Mobile Sidebar */}
       <Drawer
-        anchor="left"
+        anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        variant="temporary"
-        PaperProps={{
-          sx: {
-            width: 250,
-            background: "white",
-            borderTopRightRadius: 16,
-            borderBottomRightRadius: 16,
-            boxShadow: 4,
-          },
-        }}
       >
-        {/* Sidebar Header */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            p: 2,
-          }}
-        >
-          <Typography sx={{ fontWeight: "bold", color: "green" }}>
-            SkillLink 💼
-          </Typography>
-          <IconButton onClick={() => setDrawerOpen(false)}>
-            <span style={{ fontSize: "1.3rem" }}>✖</span>
-          </IconButton>
-        </Box>
-
-        {/* Sidebar Links */}
-        <List>
-          {navLinks.map((link) => (
-            <ListItem
-              key={link.path}
-              component={Link}
-              to={link.path}
-              onClick={() => setDrawerOpen(false)}
-              sx={{
-                "&:hover": gradientHover,
-                borderRadius: 1,
-                color: location.pathname === link.path ? "green" : "inherit",
-                mb: 1,
-              }}
-            >
-              <ListItemText primary={link.name} />
-            </ListItem>
-          ))}
-
-          {user ? (
-            <>
+        <Box sx={{ width: 250, p: 2 }}>
+          <List>
+            {navLinks.map((link) => (
               <ListItem
+                key={link.path}
                 component={Link}
-                to="/dashboard"
-                onClick={() => setDrawerOpen(false)}
-                sx={{ "&:hover": gradientHover, borderRadius: 1, mb: 1 }}
-              >
-                <ListItemText primary="Profile 👤" />
-              </ListItem>
-              <ListItem
-                onClick={() => {
-                  handleLogout();
-                  setDrawerOpen(false);
-                }}
-                sx={{ "&:hover": gradientHover, borderRadius: 1, mb: 1 }}
-              >
-                <ListItemText primary="Logout 🚪" />
-              </ListItem>
-            </>
-          ) : (
-            <>
-              <ListItem
-                component={Link}
-                to="/login"
-                onClick={() => setDrawerOpen(false)}
-                sx={{ "&:hover": gradientHover, borderRadius: 1, mb: 1 }}
-              >
-                <ListItemText primary="Login 👤" />
-              </ListItem>
-              <ListItem
-                component={Link}
-                to="/register"
+                to={link.path}
                 onClick={() => setDrawerOpen(false)}
                 sx={{
-                  bgcolor: "green.600",
-                  color: "blue",
-                  borderRadius: 1,
                   "&:hover": gradientHover,
-                  textAlign: "center",
+                  borderRadius: 1,
+                  color: location.pathname === link.path ? "green" : "inherit",
+                  mb: 1,
                 }}
               >
-                <ListItemText primary="Sign Up ✨" />
+                <ListItemText primary={link.name} />
               </ListItem>
-            </>
-          )}
-        </List>
+            ))}
+
+            {user ? (
+              <>
+                <ListItem
+                  component={Link}
+                  to="/dashboard"
+                  onClick={() => setDrawerOpen(false)}
+                  sx={{ "&:hover": gradientHover, borderRadius: 1, mb: 1 }}
+                >
+                  <ListItemText primary="Profile 👤" />
+                </ListItem>
+                <ListItem
+                  onClick={() => {
+                    handleLogout();
+                    setDrawerOpen(false);
+                  }}
+                  sx={{ "&:hover": gradientHover, borderRadius: 1, mb: 1 }}
+                >
+                  <ListItemText primary="Logout 🚪" />
+                </ListItem>
+              </>
+            ) : (
+              <>
+                <ListItem
+                  component={Link}
+                  to="/login"
+                  onClick={() => setDrawerOpen(false)}
+                  sx={{ "&:hover": gradientHover, borderRadius: 1, mb: 1 }}
+                >
+                  <ListItemText primary="Login 👤" />
+                </ListItem>
+                <ListItem
+                  component={Link}
+                  to="/register"
+                  onClick={() => setDrawerOpen(false)}
+                  sx={{
+                    bgcolor: "green.600",
+                    color: "blue",
+                    borderRadius: 1,
+                    "&:hover": gradientHover,
+                    textAlign: "center",
+                  }}
+                >
+                  <ListItemText primary="Sign Up ✨" />
+                </ListItem>
+              </>
+            )}
+          </List>
+        </Box>
       </Drawer>
 
-      {/* Main Content */}
-      <Box
-        component="main"
-        sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
-      >
+      <Box component="main" sx={{ flexGrow: 1 }}>
         <Outlet />
       </Box>
 
-      {/* Footer */}
+      {/* Footer (unchanged) */}
       <Box
         component="footer"
         sx={{
           bgcolor: "gray.900",
           color: "gray.300",
           py: 10,
-          mt: "auto", // keeps footer at bottom
+          mt: 4,
           px: 3,
         }}
       >

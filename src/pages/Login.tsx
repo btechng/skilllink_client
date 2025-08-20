@@ -1,3 +1,4 @@
+// src/pages/Login.tsx
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -8,20 +9,19 @@ import {
   Alert,
   Paper,
   InputAdornment,
-  CircularProgress,
   Backdrop,
+  CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import api from "../components/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false); // for backdrop loader
-
+  const [loading, setLoading] = useState(false); // ⬅️ NEW
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
 
@@ -33,7 +33,7 @@ const Login: React.FC = () => {
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMsg(null);
-    setLoading(true); // show loader
+    setLoading(true); // ⬅️ Start loading
 
     try {
       const { data } = await api.post("/api/auth/login", { email, password });
@@ -47,21 +47,25 @@ const Login: React.FC = () => {
     } catch (e: any) {
       setMsg(e.response?.data?.message || "❌ Error logging in");
     } finally {
-      setLoading(false); // hide loader
+      setLoading(false); // ⬅️ End loading
     }
   };
 
   return (
     <>
-      {/* Loader Backdrop */}
+      {/* Backdrop Loader */}
       <Backdrop
-        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={loading}
+        sx={{
+          color: "#fff",
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          flexDirection: "column",
+        }}
       >
-        <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-          <CircularProgress color="inherit" />
-          <Typography variant="h6">Logging you in...</Typography>
-        </Box>
+        <CircularProgress color="inherit" />
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Logging you in...
+        </Typography>
       </Backdrop>
 
       <Container maxWidth="xs" sx={{ mt: 8 }}>
@@ -107,7 +111,7 @@ const Login: React.FC = () => {
                 variant="contained"
                 color="primary"
                 fullWidth
-                disabled={loading}
+                disabled={loading} // ⬅️ Disable while loading
               >
                 Login
               </Button>

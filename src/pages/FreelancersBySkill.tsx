@@ -18,7 +18,7 @@ import {
   Alert,
 } from "@mui/material";
 import api from "../components/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 // 🔹 Types
 type Freelancer = {

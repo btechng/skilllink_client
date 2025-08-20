@@ -7,7 +7,7 @@ const API_BASE =
 // Create an axios instance
 const api = axios.create({
   baseURL: API_BASE,
-  withCredentials: true, // allows sending cookies if using sessions
+  withCredentials: false, // allows sending cookies if using sessions
 });
 
 // Attach JWT token from localStorage automatically

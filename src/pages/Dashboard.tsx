@@ -19,7 +19,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import api from "../components/api";
 import CloudinaryUpload from "../components/CloudinaryUpload";
 
@@ -73,7 +73,7 @@ export default function Dashboard() {
         .then((res) => setWorks(res.data))
         .catch(() => {});
       api
-        .get("/api/messages/me")
+        .get("/api/messages") // ✅ FIX: fetch messages for logged-in user
         .then((res) => setMessages(res.data))
         .catch(() => {});
     }
@@ -140,8 +140,8 @@ export default function Dashboard() {
       const { data } = await api.post("/api/messages", {
         to: chatUser._id,
         content: chatInput,
-      });
-      setMessages((prev) => [...prev, data]);
+      }); // ✅ FIX: correct endpoint
+      setMessages((prev) => [...prev, data]); // ✅ include new message
       setChatInput("");
       showSnackbar("Message sent!", "success");
     } catch (e: any) {
