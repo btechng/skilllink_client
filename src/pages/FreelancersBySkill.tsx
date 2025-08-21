@@ -17,9 +17,8 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import api from "../components/api";
+import api, { sendMessage } from "../components/api";
 import { useAuth } from "../context/useAuth";
-import { sendMessage } from "../components/api";
 
 // 🔹 Types
 type Freelancer = {
@@ -75,28 +74,61 @@ const FreelancersBySkill: React.FC = () => {
     setSnackbarOpen(true);
   };
 
-  // Send message
+  // ---------- Robust Send Message ----------
   const handleSendMessage = async () => {
-    if (!selectedFreelancer || !message.trim()) return;
+    if (!selectedFreelancer) {
+      showSnackbar("Please select a freelancer.", "error");
+      return;
+    }
+
+    if (!message.trim()) {
+      showSnackbar("Message cannot be empty.", "error");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      showSnackbar("You must be logged in to send messages.", "error");
+      return;
+    }
+
+    console.log("Sending message:", {
+      to: selectedFreelancer._id,
+      content: message,
+      token,
+    });
 
     try {
       await sendMessage({
         to: selectedFreelancer._id,
         content: message,
       });
+
       setMessage("");
       setOpenMessageModal(false);
       setSelectedFreelancer(null);
       showSnackbar("Message sent successfully!", "success");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Message error:", err);
-      showSnackbar("Failed to send message.", "error");
+      if (err.response) {
+        showSnackbar(`Failed: ${err.response.data.message}`, "error");
+      } else {
+        showSnackbar("Failed to send message.", "error");
+      }
     }
   };
 
   // Post job
   const handlePostJob = async () => {
-    if (!selectedFreelancer || !jobTitle.trim()) return;
+    if (!selectedFreelancer) {
+      showSnackbar("Please select a freelancer to hire.", "error");
+      return;
+    }
+
+    if (!jobTitle.trim()) {
+      showSnackbar("Job title cannot be empty.", "error");
+      return;
+    }
 
     try {
       await api.post("/api/jobs", {
@@ -105,15 +137,20 @@ const FreelancersBySkill: React.FC = () => {
         budget: jobBudget === "" ? undefined : jobBudget,
         freelancer: selectedFreelancer._id,
       });
+
       setJobTitle("");
       setJobDescription("");
       setJobBudget("");
       setOpenHireModal(false);
       setSelectedFreelancer(null);
       showSnackbar("Job posted successfully!", "success");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Job error:", err);
-      showSnackbar("Failed to post job.", "error");
+      if (err.response) {
+        showSnackbar(`Failed: ${err.response.data.message}`, "error");
+      } else {
+        showSnackbar("Failed to post job.", "error");
+      }
     }
   };
 
