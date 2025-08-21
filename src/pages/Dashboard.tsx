@@ -46,6 +46,7 @@ export default function Dashboard() {
   const [works, setWorks] = useState<Work[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [profileData, setProfileData] = useState<any>({});
+  const [newSkill, setNewSkill] = useState("");
   const [uploadUrl, setUploadUrl] = useState("");
   const [uploadType, setUploadType] = useState<"image" | "video">("image");
 
@@ -228,6 +229,62 @@ export default function Dashboard() {
             multiline
             rows={3}
           />
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle1">Skills</Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
+              {profileData.skills?.map((skill: string, index: number) => (
+                <Paper
+                  key={index}
+                  sx={{
+                    px: 1,
+                    py: 0.5,
+                    bgcolor: "grey.200",
+                    display: "flex",
+                    alignItems: "center",
+                    borderRadius: 1,
+                  }}
+                >
+                  <Typography variant="body2">{skill}</Typography>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setProfileData({
+                        ...profileData,
+                        skills: profileData.skills.filter(
+                          (s: string) => s !== skill
+                        ),
+                      });
+                    }}
+                  >
+                    ✕
+                  </Button>
+                </Paper>
+              ))}
+            </Box>
+
+            <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+              <TextField
+                label="Add Skill"
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                fullWidth
+              />
+              <Button
+                variant="contained"
+                onClick={() => {
+                  if (newSkill.trim() === "") return;
+                  setProfileData({
+                    ...profileData,
+                    skills: [...(profileData.skills || []), newSkill.trim()],
+                  });
+                  setNewSkill("");
+                }}
+              >
+                Add
+              </Button>
+            </Box>
+          </Box>
+
           <Button variant="contained" sx={{ mt: 2 }} onClick={updateProfile}>
             Save Profile
           </Button>
