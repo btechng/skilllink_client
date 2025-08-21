@@ -103,7 +103,7 @@ export default function Dashboard() {
     }
   };
 
-  // Create new work
+  // Create new work (freelancer only)
   const createWork = async () => {
     if (!uploadUrl) return;
     try {
@@ -193,14 +193,12 @@ export default function Dashboard() {
           />
         </Box>
         <Box sx={{ flex: 1 }}>
-          {/* Profile Image Upload */}
-          {!isClient && (
-            <CloudinaryUpload
-              onUploaded={(url) =>
-                setProfileData({ ...profileData, profileImage: url })
-              }
-            />
-          )}
+          {/* Profile Image Upload (ALL users) */}
+          <CloudinaryUpload
+            onUploaded={(url) =>
+              setProfileData({ ...profileData, profileImage: url })
+            }
+          />
 
           <TextField
             label="Name"
@@ -210,7 +208,6 @@ export default function Dashboard() {
             }
             fullWidth
             sx={{ mb: 1 }}
-            disabled={isClient}
           />
           <TextField
             label="Title"
@@ -220,7 +217,6 @@ export default function Dashboard() {
             }
             fullWidth
             sx={{ mb: 1 }}
-            disabled={isClient}
           />
           <TextField
             label="Bio"
@@ -231,20 +227,14 @@ export default function Dashboard() {
             fullWidth
             multiline
             rows={3}
-            disabled={isClient}
           />
-          <Button
-            variant="contained"
-            sx={{ mt: 2 }}
-            onClick={updateProfile}
-            disabled={isClient}
-          >
+          <Button variant="contained" sx={{ mt: 2 }} onClick={updateProfile}>
             Save Profile
           </Button>
         </Box>
       </Paper>
 
-      {/* Upload Work Section */}
+      {/* Upload Work Section (freelancer only) */}
       {!isClient && (
         <Paper sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2 }}>
           <Typography variant="h6">Upload New Work</Typography>
@@ -289,7 +279,7 @@ export default function Dashboard() {
         </Paper>
       )}
 
-      {/* Works Gallery */}
+      {/* Works Gallery (freelancer only) */}
       {!isClient && (
         <Box>
           <Typography variant="h6" sx={{ mb: 2 }}>
