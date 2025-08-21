@@ -17,7 +17,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import api, { sendMessage } from "../components/api";
+import api from "../components/api";
 import { useAuth } from "../context/useAuth";
 
 // 🔹 Types
@@ -86,23 +86,27 @@ const FreelancersBySkill: React.FC = () => {
       return;
     }
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      showSnackbar("You must be logged in to send messages.", "error");
-      return;
-    }
-
-    console.log("Sending message:", {
-      to: selectedFreelancer._id,
-      content: message,
-      token,
-    });
-
     try {
-      await sendMessage({
-        to: selectedFreelancer._id,
-        content: message,
-      });
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showSnackbar("You must be logged in to send messages.", "error");
+        return;
+      }
+
+      const response = await api.post(
+        "/api/messages",
+        {
+          to: selectedFreelancer._id,
+          content: message,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Message sent:", response.data);
 
       setMessage("");
       setOpenMessageModal(false);
@@ -110,8 +114,10 @@ const FreelancersBySkill: React.FC = () => {
       showSnackbar("Message sent successfully!", "success");
     } catch (err: any) {
       console.error("Message error:", err);
-      if (err.response) {
+      if (err.response?.data?.message) {
         showSnackbar(`Failed: ${err.response.data.message}`, "error");
+      } else if (err.message) {
+        showSnackbar(`Failed: ${err.message}`, "error");
       } else {
         showSnackbar("Failed to send message.", "error");
       }
@@ -131,12 +137,24 @@ const FreelancersBySkill: React.FC = () => {
     }
 
     try {
-      await api.post("/api/jobs", {
-        title: jobTitle,
-        description: jobDescription,
-        budget: jobBudget === "" ? undefined : jobBudget,
-        freelancer: selectedFreelancer._id,
-      });
+      const token = localStorage.getItem("token");
+      if (!token) {
+        showSnackbar("You must be logged in to post a job.", "error");
+        return;
+      }
+
+      await api.post(
+        "/api/jobs",
+        {
+          title: jobTitle,
+          description: jobDescription,
+          budget: jobBudget === "" ? undefined : jobBudget,
+          freelancer: selectedFreelancer._id,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       setJobTitle("");
       setJobDescription("");
@@ -146,8 +164,10 @@ const FreelancersBySkill: React.FC = () => {
       showSnackbar("Job posted successfully!", "success");
     } catch (err: any) {
       console.error("Job error:", err);
-      if (err.response) {
+      if (err.response?.data?.message) {
         showSnackbar(`Failed: ${err.response.data.message}`, "error");
+      } else if (err.message) {
+        showSnackbar(`Failed: ${err.message}`, "error");
       } else {
         showSnackbar("Failed to post job.", "error");
       }
