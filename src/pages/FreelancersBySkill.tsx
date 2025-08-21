@@ -74,74 +74,47 @@ const FreelancersBySkill: React.FC = () => {
     setSnackbarOpen(true);
   };
 
-  // ---------- Robust Send Message ----------
+  // Send message
   const handleSendMessage = async () => {
-    if (!selectedFreelancer) {
-      showSnackbar("Please select a freelancer.", "error");
-      return;
-    }
-
-    if (!message.trim()) {
-      showSnackbar("Message cannot be empty.", "error");
-      return;
-    }
+    if (!selectedFreelancer)
+      return showSnackbar("Please select a freelancer.", "error");
+    if (!message.trim())
+      return showSnackbar("Message cannot be empty.", "error");
 
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
-        showSnackbar("You must be logged in to send messages.", "error");
-        return;
-      }
+      if (!token)
+        return showSnackbar("You must be logged in to send messages.", "error");
 
-      const response = await api.post(
+      await api.post(
         "/api/messages",
-        {
-          to: selectedFreelancer._id,
-          content: message,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { to: selectedFreelancer._id, content: message },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      console.log("Message sent:", response.data);
 
       setMessage("");
       setOpenMessageModal(false);
       setSelectedFreelancer(null);
       showSnackbar("Message sent successfully!", "success");
     } catch (err: any) {
-      console.error("Message error:", err);
-      if (err.response?.data?.message) {
-        showSnackbar(`Failed: ${err.response.data.message}`, "error");
-      } else if (err.message) {
-        showSnackbar(`Failed: ${err.message}`, "error");
-      } else {
-        showSnackbar("Failed to send message.", "error");
-      }
+      showSnackbar(
+        err.response?.data?.message || "Failed to send message",
+        "error"
+      );
     }
   };
 
   // Post job
   const handlePostJob = async () => {
-    if (!selectedFreelancer) {
-      showSnackbar("Please select a freelancer to hire.", "error");
-      return;
-    }
-
-    if (!jobTitle.trim()) {
-      showSnackbar("Job title cannot be empty.", "error");
-      return;
-    }
+    if (!selectedFreelancer)
+      return showSnackbar("Please select a freelancer to hire.", "error");
+    if (!jobTitle.trim())
+      return showSnackbar("Job title cannot be empty.", "error");
 
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
-        showSnackbar("You must be logged in to post a job.", "error");
-        return;
-      }
+      if (!token)
+        return showSnackbar("You must be logged in to post a job.", "error");
 
       await api.post(
         "/api/jobs",
@@ -151,9 +124,7 @@ const FreelancersBySkill: React.FC = () => {
           budget: jobBudget === "" ? undefined : jobBudget,
           freelancer: selectedFreelancer._id,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setJobTitle("");
@@ -163,14 +134,10 @@ const FreelancersBySkill: React.FC = () => {
       setSelectedFreelancer(null);
       showSnackbar("Job posted successfully!", "success");
     } catch (err: any) {
-      console.error("Job error:", err);
-      if (err.response?.data?.message) {
-        showSnackbar(`Failed: ${err.response.data.message}`, "error");
-      } else if (err.message) {
-        showSnackbar(`Failed: ${err.message}`, "error");
-      } else {
-        showSnackbar("Failed to post job.", "error");
-      }
+      showSnackbar(
+        err.response?.data?.message || "Failed to post job",
+        "error"
+      );
     }
   };
 
@@ -181,19 +148,15 @@ const FreelancersBySkill: React.FC = () => {
     );
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", py: 8, px: 3 }}>
+    <Box sx={{ maxWidth: 900, mx: "auto", py: 8, px: 3 }}>
       <Typography variant="h4" sx={{ mb: 5, textAlign: "center" }}>
         Freelancers with skill: {skill}
       </Typography>
 
       <Box
         sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr 1fr",
-            sm: "repeat(3, 1fr)",
-            md: "repeat(4, 1fr)",
-          },
+          display: "flex",
+          flexDirection: "column",
           gap: 3,
         }}
       >
@@ -201,57 +164,41 @@ const FreelancersBySkill: React.FC = () => {
           <Card
             key={user._id}
             sx={{
-              p: 2,
-              textAlign: "center",
               display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: "center",
+              p: 2,
+              gap: 3,
             }}
           >
             <Avatar
               src={user.profileImage}
-              sx={{ width: 70, height: 70, mx: "auto", mb: 1 }}
+              sx={{ width: 80, height: 80, flexShrink: 0 }}
             />
-            <CardContent sx={{ flexGrow: 1 }}>
-              <Typography sx={{ fontWeight: "600" }}>{user.name}</Typography>
+            <CardContent sx={{ flex: 1 }}>
+              <Typography sx={{ fontWeight: 600, fontSize: "1.2rem" }}>
+                {user.name}
+              </Typography>
               <Typography variant="body2" color="textSecondary">
                 {user.title}
               </Typography>
-
-              <Box
-                sx={{
-                  mt: 1,
-                  display: "flex",
-                  flexWrap: "wrap",
-                  justifyContent: "center",
-                  gap: 0.5,
-                }}
-              >
+              <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                 {user.skills.slice(0, 3).map((skill) => (
                   <Chip key={skill} label={skill} size="small" />
                 ))}
               </Box>
             </CardContent>
-
-            <Box
-              sx={{
-                mt: 2,
-                display: "flex",
-                justifyContent: "center",
-                gap: 1,
-                flexWrap: "wrap",
-              }}
-            >
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               <Button
                 onClick={() => {
                   setSelectedFreelancer(user);
                   setOpenMessageModal(true);
                 }}
                 variant="outlined"
+                fullWidth
               >
                 Message
               </Button>
-
               {userRole === "client" && (
                 <Button
                   onClick={() => {
@@ -263,6 +210,7 @@ const FreelancersBySkill: React.FC = () => {
                     bgcolor: "green.600",
                     "&:hover": { bgcolor: "green.700" },
                   }}
+                  fullWidth
                 >
                   Hire
                 </Button>

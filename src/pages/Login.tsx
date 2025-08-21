@@ -27,7 +27,7 @@ const Login: React.FC = () => {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (user) navigate("/dashboard");
+    if (user) navigate("/");
   }, [user, navigate]);
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {

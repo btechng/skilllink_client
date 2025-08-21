@@ -219,6 +219,23 @@ export default function App() {
                       borderRadius: 0,
                       "&:hover": { bgcolor: "#15803d" },
                     }}
+                    onClick={() => {
+                      const filtered = freelancers.filter(
+                        (f) =>
+                          f.name
+                            .toLowerCase()
+                            .includes(searchTerm.toLowerCase()) ||
+                          f.title
+                            .toLowerCase()
+                            .includes(searchTerm.toLowerCase()) ||
+                          f.skills.some((skill) =>
+                            skill
+                              .toLowerCase()
+                              .includes(searchTerm.toLowerCase())
+                          )
+                      );
+                      setFilteredFreelancers(filtered);
+                    }}
                   >
                     🔍 Search
                   </Button>

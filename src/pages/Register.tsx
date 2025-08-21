@@ -319,7 +319,7 @@ export default function Register() {
                   />
                   <TextField
                     fullWidth
-                    label="Skills (comma separated)"
+                    label="Skills (comma separated), Graphics,Business,Web Development"
                     name="skills"
                     value={values.skills}
                     onChange={handleChange}

@@ -49,7 +49,6 @@ export default function Dashboard() {
   const [uploadUrl, setUploadUrl] = useState("");
   const [uploadType, setUploadType] = useState<"image" | "video">("image");
 
-  // Chat modal state
   const [chatOpen, setChatOpen] = useState(false);
   const [chatUser, setChatUser] = useState<{
     _id: string;
@@ -58,26 +57,31 @@ export default function Dashboard() {
   } | null>(null);
   const [chatInput, setChatInput] = useState("");
 
-  // Snackbar
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
     "success"
   );
 
+  const isClient = me?.role === "client";
+
   useEffect(() => {
     if (me) {
       setProfileData(me);
+
+      if (!isClient) {
+        api
+          .get("/api/works/me")
+          .then((res) => setWorks(res.data))
+          .catch(() => {});
+      }
+
       api
-        .get("/api/works/me")
-        .then((res) => setWorks(res.data))
-        .catch(() => {});
-      api
-        .get("/api/messages") // ✅ FIX: fetch messages for logged-in user
+        .get("/api/messages")
         .then((res) => setMessages(res.data))
         .catch(() => {});
     }
-  }, [me]);
+  }, [me, isClient]);
 
   const showSnackbar = (message: string, severity: "success" | "error") => {
     setSnackbarMessage(message);
@@ -140,8 +144,8 @@ export default function Dashboard() {
       const { data } = await api.post("/api/messages", {
         to: chatUser._id,
         content: chatInput,
-      }); // ✅ FIX: correct endpoint
-      setMessages((prev) => [...prev, data]); // ✅ include new message
+      });
+      setMessages((prev) => [...prev, data]);
       setChatInput("");
       showSnackbar("Message sent!", "success");
     } catch (e: any) {
@@ -159,7 +163,6 @@ export default function Dashboard() {
       </Typography>
     );
 
-  // Filter messages for chat with selected user
   const chatMessages = chatUser
     ? messages.filter(
         (m) => m.from._id === chatUser._id || m.to._id === chatUser._id
@@ -183,8 +186,22 @@ export default function Dashboard() {
 
       {/* Profile Section */}
       <Paper sx={{ p: 3, display: "flex", alignItems: "center", gap: 2 }}>
-        <Avatar src={me.profileImage || ""} sx={{ width: 64, height: 64 }} />
+        <Box sx={{ position: "relative" }}>
+          <Avatar
+            src={profileData.profileImage || ""}
+            sx={{ width: 64, height: 64 }}
+          />
+        </Box>
         <Box sx={{ flex: 1 }}>
+          {/* Profile Image Upload */}
+          {!isClient && (
+            <CloudinaryUpload
+              onUploaded={(url) =>
+                setProfileData({ ...profileData, profileImage: url })
+              }
+            />
+          )}
+
           <TextField
             label="Name"
             value={profileData.name || ""}
@@ -193,6 +210,7 @@ export default function Dashboard() {
             }
             fullWidth
             sx={{ mb: 1 }}
+            disabled={isClient}
           />
           <TextField
             label="Title"
@@ -202,6 +220,7 @@ export default function Dashboard() {
             }
             fullWidth
             sx={{ mb: 1 }}
+            disabled={isClient}
           />
           <TextField
             label="Bio"
@@ -212,81 +231,94 @@ export default function Dashboard() {
             fullWidth
             multiline
             rows={3}
+            disabled={isClient}
           />
-          <Button variant="contained" sx={{ mt: 2 }} onClick={updateProfile}>
+          <Button
+            variant="contained"
+            sx={{ mt: 2 }}
+            onClick={updateProfile}
+            disabled={isClient}
+          >
             Save Profile
           </Button>
         </Box>
       </Paper>
 
       {/* Upload Work Section */}
-      <Paper sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2 }}>
-        <Typography variant="h6">Upload New Work</Typography>
-        <CloudinaryUpload
-          onUploaded={(url, type) => {
-            setUploadUrl(url);
-            setUploadType(type || "image");
-          }}
-        />
-        {uploadUrl && (
-          <Box>
-            <TextField
-              label="Title"
-              value={profileData.newWorkTitle || ""}
-              onChange={(e) =>
-                setProfileData({ ...profileData, newWorkTitle: e.target.value })
-              }
-              fullWidth
-              sx={{ mb: 1 }}
-            />
-            <TextField
-              label="Description"
-              value={profileData.newWorkDescription || ""}
-              onChange={(e) =>
-                setProfileData({
-                  ...profileData,
-                  newWorkDescription: e.target.value,
-                })
-              }
-              fullWidth
-              multiline
-              rows={2}
-            />
-            <Button variant="contained" onClick={createWork}>
-              Save Work
-            </Button>
-          </Box>
-        )}
-      </Paper>
+      {!isClient && (
+        <Paper sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2 }}>
+          <Typography variant="h6">Upload New Work</Typography>
+          <CloudinaryUpload
+            onUploaded={(url, type) => {
+              setUploadUrl(url);
+              setUploadType(type || "image");
+            }}
+          />
+          {uploadUrl && (
+            <Box>
+              <TextField
+                label="Title"
+                value={profileData.newWorkTitle || ""}
+                onChange={(e) =>
+                  setProfileData({
+                    ...profileData,
+                    newWorkTitle: e.target.value,
+                  })
+                }
+                fullWidth
+                sx={{ mb: 1 }}
+              />
+              <TextField
+                label="Description"
+                value={profileData.newWorkDescription || ""}
+                onChange={(e) =>
+                  setProfileData({
+                    ...profileData,
+                    newWorkDescription: e.target.value,
+                  })
+                }
+                fullWidth
+                multiline
+                rows={2}
+              />
+              <Button variant="contained" onClick={createWork}>
+                Save Work
+              </Button>
+            </Box>
+          )}
+        </Paper>
+      )}
 
       {/* Works Gallery */}
-      <Box>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          My Works
-        </Typography>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-          {works.map((w) => (
-            <Paper key={w._id} sx={{ p: 1, borderRadius: 2, width: 220 }}>
-              <Typography sx={{ fontWeight: 600 }}>{w.title}</Typography>
-              {w.mediaType === "image" ? (
-                <img
-                  src={w.mediaUrl}
-                  style={{ width: "100%", borderRadius: 6 }}
-                />
-              ) : (
-                <video
-                  src={w.mediaUrl}
-                  controls
-                  style={{ width: "100%", borderRadius: 6 }}
-                />
-              )}
-              <Typography variant="caption">
-                {new Date(w.createdAt).toLocaleString()}
-              </Typography>
-            </Paper>
-          ))}
+      {!isClient && (
+        <Box>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            My Works
+          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+            {works.map((w) => (
+              <Paper key={w._id} sx={{ p: 1, borderRadius: 2, width: 220 }}>
+                <Typography sx={{ fontWeight: 600 }}>{w.title}</Typography>
+                {w.mediaType === "image" ? (
+                  <img
+                    src={w.mediaUrl}
+                    style={{ width: "100%", borderRadius: 6 }}
+                  />
+                ) : (
+                  <video
+                    src={w.mediaUrl}
+                    controls
+                    style={{ width: "100%", borderRadius: 6 }}
+                  />
+                )}
+                <Typography variant="caption">
+                  {new Date(w.createdAt).toLocaleString()}
+                </Typography>
+              </Paper>
+            ))}
+          </Box>
         </Box>
-      </Box>
+      )}
 
       {/* Messages Section */}
       <Box>
