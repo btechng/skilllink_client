@@ -1,5 +1,5 @@
 // src/components/Layout.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   AppBar,
@@ -18,7 +18,8 @@ import { useAuth } from "../context/useAuth";
 const Layout: React.FC = () => {
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
-  const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showFooter, setShowFooter] = useState(false);
   const location = useLocation();
 
   const navLinks = [
@@ -42,8 +43,15 @@ const Layout: React.FC = () => {
     navigate("/");
   };
 
+  // Show footer after 20 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => setShowFooter(true), 20000); // 20 seconds
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      {/* AppBar */}
       <AppBar position="sticky" color="default" elevation={3}>
         <Toolbar sx={{ justifyContent: "space-between" }}>
           <Typography
@@ -133,6 +141,7 @@ const Layout: React.FC = () => {
         </Toolbar>
       </AppBar>
 
+      {/* Drawer */}
       <Drawer
         anchor="right"
         open={drawerOpen}
@@ -207,11 +216,15 @@ const Layout: React.FC = () => {
         </Box>
       </Drawer>
 
+      {/* Main Content */}
       <Box component="main" sx={{ flexGrow: 1 }}>
         <Outlet />
+        <br />
+        <br />
+        <br />
       </Box>
 
-      {/* Footer (unchanged) */}
+      {/* Footer with fade-in */}
       <Box
         component="footer"
         sx={{
@@ -220,6 +233,8 @@ const Layout: React.FC = () => {
           py: 10,
           mt: 4,
           px: 3,
+          opacity: showFooter ? 1 : 0,
+          transition: "opacity 1.5s ease-in",
         }}
       >
         <Box
