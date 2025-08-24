@@ -304,50 +304,6 @@ const Layout: React.FC = () => {
               >
                 Contact ✉️
               </Button>
-              <Button
-                sx={{
-                  color: "gray.300",
-                  textTransform: "none",
-                  "&:hover": gradientHover,
-                }}
-              >
-                Careers 💼
-              </Button>
-            </Box>
-          </Box>
-
-          <Box>
-            <Typography variant="h6" sx={{ color: "white", mb: 1 }}>
-              Follow Us
-            </Typography>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <Button
-                sx={{
-                  color: "gray.300",
-                  textTransform: "none",
-                  "&:hover": gradientHover,
-                }}
-              >
-                Twitter 🐦
-              </Button>
-              <Button
-                sx={{
-                  color: "gray.300",
-                  textTransform: "none",
-                  "&:hover": gradientHover,
-                }}
-              >
-                LinkedIn 💼
-              </Button>
-              <Button
-                sx={{
-                  color: "gray.300",
-                  textTransform: "none",
-                  "&:hover": gradientHover,
-                }}
-              >
-                Instagram 📸
-              </Button>
             </Box>
           </Box>
         </Box>
